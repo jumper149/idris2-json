@@ -60,8 +60,8 @@ fromString : String -> JSONValue -- TODO
 
 public export
 interface ToJSON a where
-  encode : a -> JSONValue
+  toJSON : a -> JSONValue
 
 public export
 interface FromJSON a where
-  decode : JSONValue -> Maybe a
+  fromJSON : JSONValue -> Maybe a
