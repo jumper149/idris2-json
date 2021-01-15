@@ -1,6 +1,6 @@
 with import <nixpkgs> {};
 pkgs.mkShell {
   buildInputs = [
-    pkgs.idris2
+    (callPackage (import ./idris2.nix) {})
   ];
 }
