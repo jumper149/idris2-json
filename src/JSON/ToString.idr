@@ -3,10 +3,10 @@ module JSON.ToString
 import JSON.Value
 
 private
-escapeControlChar : Char -> List Char
+escapeControlChar : Char -> List Char -- TODO
 
 private
-escapeChars : List Char -> List Char -- TODO: remove all other control characters
+escapeChars : List Char -> List Char
 escapeChars [] = []
 escapeChars (c :: cs) = c' ++ escapeChars cs where
   prependBackslash : Char -> List Char
