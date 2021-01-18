@@ -1,8 +1,8 @@
-module JSON
+module Data.JSON
 
-import public JSON.Value
-import JSON.FromString
-import JSON.ToString
+import public Data.JSON.Value
+import Data.JSON.FromString
+import Data.JSON.ToString
 
 public export
 interface ToJSON a where

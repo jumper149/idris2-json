@@ -1,4 +1,4 @@
-module JSON.Value.Precision
+module Data.Precision
 
 import Data.Fin
 import Data.List

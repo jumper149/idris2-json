@@ -1,6 +1,6 @@
-module JSON.Value.Scientific
+module Data.Scientific
 
-import JSON.Value.Precision
+import Data.Precision
 
 import Data.Fin
 import Data.List
@@ -9,3 +9,5 @@ import Data.Vect
 data Scientific : Type where
   SciZ : Scientific
   Sci : Precision 10 n -> Scientific
+
+prettyShow : Scientific -> String

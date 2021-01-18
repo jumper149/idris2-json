@@ -1,6 +1,6 @@
-module JSON.ToString
+module Data.JSON.ToString
 
-import JSON.Value
+import Data.JSON.Value
 
 private
 escapeControlChar : Char -> List Char -- TODO

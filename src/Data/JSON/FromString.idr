@@ -1,6 +1,6 @@
-module JSON.FromString
+module Data.JSON.FromString
 
-import JSON.Value
+import Data.JSON.Value
 
 public export
 fromString : String -> JSONValue -- TODO

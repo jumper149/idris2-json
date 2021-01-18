@@ -1,4 +1,4 @@
-module JSON.Value
+module Data.JSON.Value
 
 public export
 data JSONValue : Type where
