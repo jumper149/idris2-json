@@ -16,7 +16,7 @@ greaterNat k j with (compare k j)
 --   b > x >= 1
 export
 data Coefficient : (b : Nat) -> (n : Nat) -> Type where
-  Coeff : (Fin (S b)) ->
+  Coeff : (Fin (S b)) -> -- 0 - (b - 1) => 1 - b
           Vect n (Fin (S (S b))) ->
           Coefficient (S (S b)) n
 
@@ -36,10 +36,34 @@ eqCoeffs : Coefficient b n -> Coefficient b m -> Bool
 eqCoeffs (Coeff x xs) (Coeff y ys) = x == y && eqDigits xs ys
 
 private
+compareDigits : Vect n (Fin (S (S b))) -> Vect m (Fin (S (S b))) -> Ordering
+compareDigits [] ys =
+  if all (== 0) ys
+     then EQ
+     else LT
+compareDigits xs [] =
+  if all (== 0) xs
+     then EQ
+     else GT
+compareDigits (x :: xs) (y :: ys) =
+  case compare x y of
+       LT => LT
+       EQ => compareDigits xs ys
+       GT => GT
+
+export
+compareCoeffs : Coefficient b n -> Coefficient b m -> Ordering
+compareCoeffs (Coeff x xs) (Coeff y ys) =
+  case compare x y of
+       LT => LT
+       EQ => compareDigits xs ys
+       GT => GT
+
+private
 plusCoeffs : Coefficient b n -> Coefficient b m -> (Coefficient b (greaterNat n m), Bool)
 
 ||| Can construct all x with:
-|||   x /= 0
+|||   x > 0
 public export
 data Precision : (b : Nat) -> (n : Nat) -> Type where
   Prec : Coefficient b n -> Integer -> Precision b n
@@ -52,6 +76,15 @@ Show (Precision 10 n) where
 export
 eqPrecs : Precision b n -> Precision b m -> Bool
 eqPrecs (Prec coeff expon) (Prec coeff' expon') = expon == expon' && eqCoeffs coeff coeff'
+
+-- TODO: export?
+export
+comparePrecs : Precision b n -> Precision b m -> Ordering
+comparePrecs (Prec coeff expon) (Prec coeff' expon') =
+  case compare expon expon' of
+       LT => LT
+       EQ => compareCoeffs coeff coeff'
+       GT => GT
 
 export
 plusPrecs : Precision b n -> Precision b m -> Precision b (greaterNat n m)
