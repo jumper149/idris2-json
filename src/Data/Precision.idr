@@ -20,6 +20,11 @@ data Coefficient : (b : Nat) -> (n : Nat) -> Type where
           Vect n (Fin (S (S b))) ->
           Coefficient (S (S b)) n
 
+export
+Show (Coefficient 10 n) where
+  show (Coeff x xs) =
+    show (finToNat (weaken x)) ++ "." ++ concat (show . finToNat <$> xs)
+
 private
 eqDigits : Vect n (Fin (S (S b))) -> Vect m (Fin (S (S b))) -> Bool
 eqDigits [] ys = all (== 0) ys
@@ -39,6 +44,12 @@ public export
 data Precision : (b : Nat) -> (n : Nat) -> Type where
   Prec : Coefficient b n -> Integer -> Precision b n
 
+export
+Show (Precision 10 n) where
+  show (Prec coeff expon) = show coeff ++ "e" ++ show expon
+
+-- TODO: export?
+export
 eqPrecs : Precision b n -> Precision b m -> Bool
 eqPrecs (Prec coeff expon) (Prec coeff' expon') = expon == expon' && eqCoeffs coeff coeff'
 

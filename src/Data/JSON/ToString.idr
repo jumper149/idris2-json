@@ -1,6 +1,7 @@
 module Data.JSON.ToString
 
 import Data.JSON.Value
+import Data.Scientific
 
 private
 escapeControlChar : Char -> List Char -- TODO
