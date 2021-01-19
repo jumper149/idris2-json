@@ -122,15 +122,16 @@ abs : Scientific b -> Scientific b
 abs SciZ = SciZ
 abs (Sci _ c e) = Sci Positive c e
 
+-- TODO: What happens, when Integer is negative? Low priority, since this is private.
 private
-||| The digits of a Nat, least significant first.
-natDigits : {b : _} -> Nat -> List (Fin (S (S b)))
-natDigits 0 = []
-natDigits x = d :: natDigits r where
+||| The digits of an Integer, least significant first.
+integerDigits : {b : _} -> Integer -> List (Fin (S (S b)))
+integerDigits 0 = []
+integerDigits x = d :: integerDigits r where
   d : Fin (S (S b))
-  d = restrict (S b) $ natToInteger x
-  r : Nat
-  r = integerToNat $ natToInteger x `div` natToInteger (S (S b))
+  d = restrict (S b) x
+  r : Integer
+  r = x `div` natToInteger (S (S b))
 
 private
 removeLeadingZeros : List (Fin (S (S b))) -> Maybe (Fin (S b), List (Fin (S (S b))))
@@ -147,17 +148,10 @@ fromDigits ys =
                             Nothing => Sci Positive (CoeffInt x) (cast $ length ys')
                             Just (x', xs) => Sci Positive (CoeffFloat x (reverse xs) x') (cast $ length ys')
 
-private
-fromScientificDigits : List (Fin (S (S b)), Nat) -> Scientific (S (S b))
-
 export
 fromFin : Fin (S (S b)) -> Scientific (S (S b))
 fromFin FZ = SciZ
 fromFin (FS x) = Sci Positive (CoeffInt x) 0
-
-export
-fromNat : {b : _} -> Nat -> Scientific (S (S b))
-fromNat = fromDigits . natDigits
 
 export
 fromInteger : {b : _} -> Integer -> Scientific (S (S b))
@@ -166,7 +160,11 @@ fromInteger x = if x < 0
                    else fromIntegerPositive x
 where
   fromIntegerPositive : Integer -> Scientific (S (S b))
-  fromIntegerPositive = fromNat . integerToNat . abs
+  fromIntegerPositive = fromDigits . integerDigits . abs
+
+export
+fromNat : {b : _} -> Nat -> Scientific (S (S b))
+fromNat = fromInteger . natToInteger
 
 -- -- TODO: consider other implementations:
 -- -- - Fractional might not terminate, because of infinite representation
