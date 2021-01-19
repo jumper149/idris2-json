@@ -109,53 +109,90 @@ Ord (Scientific b) where
                                       EQ => compare c' c
                                       comp => comp
 
+export
+negate : Scientific b -> Scientific b
+negate SciZ = SciZ
+negate (Sci s c e) = let s' = case s of
+                                   Positive => Negative
+                                   Negative => Positive
+                     in Sci s' c e
+
+export
+abs SciZ = SciZ
+abs (Sci _ c e) = Sci Positive c e
+
 private
-scientificDigits : {b : _} -> Nat -> List (Fin (S (S b)))
-scientificDigits 0 = []
-scientificDigits x = d :: scientificDigits r where
+||| The digits of a Nat, least significant first.
+natDigits : {b : _} -> Nat -> List (Fin (S (S b)))
+natDigits 0 = []
+natDigits x = d :: natDigits r where
   d : Fin (S (S b))
   d = restrict (S b) $ natToInteger x
   r : Nat
   r = integerToNat $ natToInteger x `div` natToInteger (S (S b))
 
 private
-sumUpScientificDigits : List (Fin (S (S b))) -> Scientific (S (S b))
+removeLeadingZeros : List (Fin (S (S b))) -> Maybe (Fin (S b), List (Fin (S (S b))))
+removeLeadingZeros [] = Nothing
+removeLeadingZeros (FZ :: xs) = removeLeadingZeros xs
+removeLeadingZeros (FS x :: xs) = Just (x, xs)
 
--- TODO: consider other implementations:
--- - Fractional might not terminate, because of infinite representation
--- - Integral doesn't sound like it would fit, but mod and div make still make sense
-public export
-Num (Scientific (S (S b))) where
-  SciZ + y = y
-  x + SciZ = x
-  -- TODO: plus
-  (Sci s c e) + (Sci s' c' e') = ?plus_2
-  -- TODO: mult
-  x * y = ?mult
-  -- TODO: put in sign s
-  -- TODO: this cannot work, because the base is not accessible in this context; Is it accessible from the implementation definition?
-  --   do it like here: https://github.com/idris-lang/Idris2/blob/13cc27da1f57dac1c08025b084990d7f089a9cd1/libs/base/Data/Fin.idr#L142
-  fromInteger x = sumUpScientificDigits $ ?scientificDigitsNonDependendent $ integerToNat x where
-    s : Sign
-    s = if x < 0
-           then Negative
-           else Positive
+private
+fromDigits : List (Fin (S (S b))) -> Scientific (S (S b))
+fromDigits ys =
+  case removeLeadingZeros $ reverse ys of
+       Nothing => SciZ
+       Just (x, ys') => case removeLeadingZeros $ reverse ys' of
+                            Nothing => Sci Positive (CoeffInt x) (cast $ length ys')
+                            Just (x', xs) => Sci Positive (CoeffFloat x (reverse xs) x') (cast $ length ys')
 
-public export
-Neg (Scientific (S (S b))) where
-  negate SciZ = SciZ
-  negate (Sci s c e) = Sci s' c e where
-    s' : Sign
-    s' = case s of
-              Positive => Negative
-              Negative => Positive
+private
+fromScientificDigits : List (Fin (S (S b)), Nat) -> Scientific (S (S b))
 
-public export
-Abs (Scientific (S (S b))) where
-  abs SciZ = SciZ
-  abs (Sci _ c e) = Sci Positive c e
+export
+fromFin : Fin (S (S b)) -> Scientific (S (S b))
+fromFin FZ = SciZ
+fromFin (FS x) = Sci Positive (CoeffInt x) 0
+
+export
+fromNat : {b : _} -> Nat -> Scientific (S (S b))
+fromNat = fromDigits . natDigits
+
+export
+fromInteger : {b : _} -> Integer -> Scientific (S (S b))
+fromInteger x = if x < 0
+                   then negate $ fromIntegerPositive x
+                   else fromIntegerPositive x
+where
+  fromIntegerPositive : Integer -> Scientific (S (S b))
+  fromIntegerPositive = fromNat . integerToNat . abs
+
+-- -- TODO: consider other implementations:
+-- -- - Fractional might not terminate, because of infinite representation
+-- -- - Integral doesn't sound like it would fit, but mod and div make still make sense
+-- public export
+-- Num (Scientific (S (S b))) where
+--   SciZ + y = y
+--   x + SciZ = x
+--   -- TODO: plus
+--   (Sci s c e) + (Sci s' c' e') = ?plus_2
+--   -- TODO: mult
+--   x * y = ?mult
+--   -- fromInteger = fromInteger
+
+--public export
+--Neg (Scientific (S (S b))) where
+--  -- negate = negate
+
+--public export
+--Abs (Scientific (S (S b))) where
+--  -- abs = abs
 
 export
 prettyShowScientific : Scientific 10 -> String
 prettyShowScientific SciZ = "0"
-prettyShowScientific (Sci s c e) = prettyShowSign s ++ prettyShowCoefficient c ++ "e" ++ show e where
+prettyShowScientific (Sci s c e) = prettyShowSign s ++ prettyShowCoefficient c ++ prettyExponent where
+  prettyExponent : String
+  prettyExponent = case e of
+                        0 => ""
+                        x => "e" ++ show x
