@@ -6,7 +6,7 @@ public export
 data JSONValue : Type where
   JSONNull : JSONValue
   JSONBool : Bool -> JSONValue
-  JSONNumber : Scientific -> JSONValue
+  JSONNumber : Scientific 10 -> JSONValue
   JSONString : String -> JSONValue
   JSONObject : List (String, JSONValue) -> JSONValue
   JSONArray : List JSONValue -> JSONValue
@@ -25,7 +25,7 @@ public export
 Show JSONValue where
   show JSONNull = "JSONNull"
   show (JSONBool x) = "JSONBool " ++ show x
-  show (JSONNumber x) = "JSONNumber " ++ show x
+  show (JSONNumber x) = "JSONNumber " ++ prettyShowScientific x
   show (JSONString x) = "JSONString " ++ show x
   show (JSONObject xs) = "JSONObject " ++ show xs
   show (JSONArray xs) = "JSONArray " ++ show xs
