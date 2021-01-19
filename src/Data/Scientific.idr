@@ -1,9 +1,8 @@
 module Data.Scientific
--- TODO: don't export everything puplicly?
+-- TODO: don't export everything publicly?
 
 import Data.Fin
 import Data.List
-import Data.Vect
 
 public export
 data Coefficient : (b : Nat) -> Type where
@@ -110,22 +109,40 @@ Ord (Scientific b) where
                                       EQ => compare c' c
                                       comp => comp
 
+private
+scientificDigits : {b : _} -> Nat -> List (Fin (S (S b)))
+scientificDigits 0 = []
+scientificDigits x = d :: scientificDigits r where
+  d : Fin (S (S b))
+  d = restrict (S b) $ natToInteger x
+  r : Nat
+  r = integerToNat $ natToInteger x `div` natToInteger (S (S b))
+
+private
+sumUpScientificDigits : List (Fin (S (S b))) -> Scientific (S (S b))
+
 -- TODO: consider other implementations:
 -- - Fractional might not terminate, because of infinite representation
 -- - Integral doesn't sound like it would fit, but mod and div make still make sense
 public export
-Num (Scientific b) where
+Num (Scientific (S (S b))) where
   SciZ + y = y
   x + SciZ = x
   -- TODO: plus
   (Sci s c e) + (Sci s' c' e') = ?plus_2
   -- TODO: mult
   x * y = ?mult
-  -- TODO: fromInteger
-  fromInteger x = ?from
+  -- TODO: put in sign s
+  -- TODO: this cannot work, because the base is not accessible in this context; Is it accessible from the implementation definition?
+  --   do it like here: https://github.com/idris-lang/Idris2/blob/13cc27da1f57dac1c08025b084990d7f089a9cd1/libs/base/Data/Fin.idr#L142
+  fromInteger x = sumUpScientificDigits $ ?scientificDigitsNonDependendent $ integerToNat x where
+    s : Sign
+    s = if x < 0
+           then Negative
+           else Positive
 
 public export
-Neg (Scientific b) where
+Neg (Scientific (S (S b))) where
   negate SciZ = SciZ
   negate (Sci s c e) = Sci s' c e where
     s' : Sign
@@ -134,7 +151,7 @@ Neg (Scientific b) where
               Negative => Positive
 
 public export
-Abs (Scientific b) where
+Abs (Scientific (S (S b))) where
   abs SciZ = SciZ
   abs (Sci _ c e) = Sci Positive c e
 
