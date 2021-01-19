@@ -118,6 +118,7 @@ negate (Sci s c e) = let s' = case s of
                      in Sci s' c e
 
 export
+abs : Scientific b -> Scientific b
 abs SciZ = SciZ
 abs (Sci _ c e) = Sci Positive c e
 
