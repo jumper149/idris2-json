@@ -1,5 +1,4 @@
 module Data.Scientific
--- TODO: add Num instance or arithmetic functions
 -- TODO: don't export everything puplicly?
 
 import Data.Fin
@@ -110,6 +109,34 @@ Ord (Scientific b) where
          (Negative, Negative) => case compare e' e of
                                       EQ => compare c' c
                                       comp => comp
+
+-- TODO: consider other implementations:
+-- - Fractional might not terminate, because of infinite representation
+-- - Integral doesn't sound like it would fit, but mod and div make still make sense
+public export
+Num (Scientific b) where
+  SciZ + y = y
+  x + SciZ = x
+  -- TODO: plus
+  (Sci s c e) + (Sci s' c' e') = ?plus_2
+  -- TODO: mult
+  x * y = ?mult
+  -- TODO: fromInteger
+  fromInteger x = ?from
+
+public export
+Neg (Scientific b) where
+  negate SciZ = SciZ
+  negate (Sci s c e) = Sci s' c e where
+    s' : Sign
+    s' = case s of
+              Positive => Negative
+              Negative => Positive
+
+public export
+Abs (Scientific b) where
+  abs SciZ = SciZ
+  abs (Sci _ c e) = Sci Positive c e
 
 export
 prettyShowScientific : Scientific 10 -> String
