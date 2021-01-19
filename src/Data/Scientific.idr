@@ -166,12 +166,62 @@ export
 fromNat : {b : _} -> Nat -> Scientific (S (S b))
 fromNat = fromInteger . natToInteger
 
+||| All bits of a Coefficient, least significant first.
+coefficientBits : Coefficient (S (S b)) -> List (Fin (S (S b)))
+coefficientBits (CoeffInt x) = [FS x]
+coefficientBits (CoeffFloat x xs x') = reverse $ FS x :: xs ++ [FS x']
+
+-- TODO: currently add and subtract require equal lengths for the coefficients
+-- adds 1 bit (might be zero)
+addBits : {b : _} ->
+          (carry : Bool) ->
+          List (Fin (S (S b))) ->
+          List (Fin (S (S b))) ->
+          List (Fin (S (S b)))
+addBits False [] [] = [FZ]
+addBits True [] [] = [FS FZ]
+addBits carry p@[] q@(y :: ys) = addBits carry q p -- TODO: case can be avoided when one is larger than the other
+addBits False (x :: xs) [] = x :: addBits False xs []
+addBits True (x :: xs) [] = case strengthen $ FS x of
+                                 Left _ => FZ :: addBits True xs []
+                                 Right x' => x' :: addBits False xs []
+addBits carry (x :: xs) (y :: ys) =
+  restrict (S b) addition :: addBits (addition >= natToInteger (S (S b))) xs ys where
+    addition : Integer
+    addition = if carry
+                  then finToInteger x + finToInteger y + 1
+                  else finToInteger x + finToInteger y
+
+subtractBits : {b : _} ->
+               (borrow : Bool) ->
+               List (Fin (S (S b))) ->
+               List (Fin (S (S b))) ->
+               List (Fin (S (S b)))
+subtractBits False [] [] = [FZ]
+subtractBits True [] [] = ?thatShouldntHappen1
+subtractBits borrow [] (x :: xs) = ?thatShouldntHappen2
+subtractBits False (x :: xs) [] = x :: subtractBits False xs []
+subtractBits True (FZ :: xs) [] = last :: subtractBits True xs []
+subtractBits True ((FS x) :: xs) [] = weaken x :: subtractBits False xs []
+subtractBits borrow (x :: xs) (y :: ys) = ?subtractBits_rhs_4
+
 export
-plus : Scientific (S (S b)) -> Scientific (S (S b)) -> Scientific (S (S b))
+plus : {b : _} -> Scientific (S (S b)) -> Scientific (S (S b)) -> Scientific (S (S b))
 plus SciZ y = y
 plus x SciZ = x
 -- TODO: finish plus
-plus (Sci s c e) (Sci s' c' e') = ?plus_rhs_2
+plus x@(Sci s c e) y@(Sci s' c' e') =
+  case compare e e' of
+       GT => plus y x
+       _ => ?asdasd where
+         exponentDifference : Nat
+         exponentDifference = integerToNat $ e' - e
+         bits : List (Fin (S (S b)))
+         bits = addBits False (coefficientBits c ++ replicate exponentDifference FZ) (coefficientBits c')
+         s'' : Sign
+         c'' : Coefficient (S (S b))
+         e'' : Integer
+         e'' = e' + ?additionalExponent bits
 
 ||| Multiply two Coefficients and return True in the Bool, when the product is greater than the base.
 multCoefficents : {b : _} -> Coefficient (S (S b)) -> Coefficient (S (S b)) -> (Coefficient (S (S b)), Bool)
