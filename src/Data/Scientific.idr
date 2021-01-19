@@ -1,5 +1,6 @@
 module Data.Scientific
 -- TODO: add Num instance or arithmetic functions
+-- TODO: don't export everything puplicly?
 
 import Data.Fin
 import Data.List

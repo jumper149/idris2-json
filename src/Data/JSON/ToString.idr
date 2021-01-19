@@ -28,7 +28,7 @@ toString JSONNull = "null"
 toString (JSONBool x) = case x of
                              True => "true"
                              False => "false"
-toString (JSONNumber x) = show x -- TODO: use scientific number
+toString (JSONNumber x) = prettyShowScientific x
 toString (JSONString x) = pack $ escapeChars $ unpack $ x where
 toString (JSONObject xs) = "{" ++ pairsToString xs ++ "}" where
   pairsToString : List (String, JSONValue) -> String
