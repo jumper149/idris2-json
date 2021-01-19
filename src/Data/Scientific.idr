@@ -166,17 +166,52 @@ export
 fromNat : {b : _} -> Nat -> Scientific (S (S b))
 fromNat = fromInteger . natToInteger
 
+export
+plus : Scientific (S (S b)) -> Scientific (S (S b)) -> Scientific (S (S b))
+plus SciZ y = y
+plus x SciZ = x
+-- TODO: finish plus
+plus (Sci s c e) (Sci s' c' e') = ?plus_rhs_2
+
+||| Multiply two Coefficients and return True in the Bool, when the product is greater than the base.
+multCoefficents : {b : _} -> Coefficient (S (S b)) -> Coefficient (S (S b)) -> (Coefficient (S (S b)), Bool)
+multCoefficents (CoeffInt x) (CoeffInt y) =
+  case integerToFin res (S b) of
+       Nothing => (CoeffInt $ restrict b res, True)
+       Just fin => (CoeffInt fin, False)
+where
+  res : Integer
+  res = (finToInteger x + 1) * (finToInteger y + 1) - 1
+multCoefficents a@(CoeffInt x) b@(CoeffFloat y ys y') = multCoefficents b a
+-- TODO: finish multCoefficents
+multCoefficents (CoeffFloat x xs x') (CoeffInt y) = ?multCoefficents_rhs_2
+multCoefficents (CoeffFloat x xs x') (CoeffFloat y ys y') = ?multCoefficents_rhs_3
+
+export
+mult : {b : _} -> Scientific (S (S b)) -> Scientific (S (S b)) -> Scientific (S (S b))
+mult SciZ y = SciZ
+mult x SciZ = SciZ
+mult (Sci s c e) (Sci s' c' e') = Sci s'' c'' e'' where
+  coefficientPair : (Coefficient (S (S b)), Bool)
+  coefficientPair = multCoefficents c c'
+  s'' : Sign
+  s'' = if s == s'
+           then Positive
+           else Negative
+  c'' : Coefficient (S (S b))
+  c'' = fst coefficientPair
+  e'' : Integer
+  e'' = if snd coefficientPair
+           then e + e' + 1
+           else e + e'
+
 -- -- TODO: consider other implementations:
 -- -- - Fractional might not terminate, because of infinite representation
 -- -- - Integral doesn't sound like it would fit, but mod and div make still make sense
 -- public export
 -- Num (Scientific (S (S b))) where
---   SciZ + y = y
---   x + SciZ = x
---   -- TODO: plus
---   (Sci s c e) + (Sci s' c' e') = ?plus_2
---   -- TODO: mult
---   x * y = ?mult
+--   -- (+) = plus
+--   -- (*) = mult
 --   -- fromInteger = fromInteger
 
 --public export
